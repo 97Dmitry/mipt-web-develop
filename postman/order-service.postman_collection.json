@@ -1,0 +1,405 @@
+{
+  "info": {
+    "_postman_id": "7fb35ec1-6722-4b4d-bf7d-06f79a31f002",
+    "name": "Lamp Factory / Order Service",
+    "description": "Коллекция order-service. Корзина и создание заказа доступны гостю по sessionId. Административные endpoint работают без авторизации (auth добавляется в модуле 5).",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    { "key": "orderServiceUrl", "value": "http://localhost:3002" },
+    { "key": "sessionId", "value": "demo-session-0000-0000-000000000001" },
+    { "key": "cartItemId", "value": "1" },
+    { "key": "orderId", "value": "1" }
+  ],
+  "item": [
+    {
+      "name": "Корзина (гость)",
+      "item": [
+        {
+          "name": "GET /cart/{sessionId} — пустая корзина",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));",
+                  "pm.test('Cart is empty', () => {",
+                  "  const body = pm.response.json().data;",
+                  "  pm.expect(body.items).to.have.lengthOf(0);",
+                  "  pm.expect(body.total).to.equal(0);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{orderServiceUrl}}/cart/{{sessionId}}",
+              "host": ["{{orderServiceUrl}}"],
+              "path": ["cart", "{{sessionId}}"]
+            },
+            "description": "Первый запрос создаёт корзину. Возвращает пустой список items и total=0."
+          }
+        },
+        {
+          "name": "POST /cart/{sessionId}/items — добавить товар #1",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 201', () => pm.response.to.have.status(201));",
+                  "const items = pm.response.json().data.items;",
+                  "pm.collectionVariables.set('cartItemId', items[0].id);",
+                  "pm.test('Item added', () => pm.expect(items.length).to.equal(1));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"productId\": 1,\n  \"qty\": 2\n}"
+            },
+            "url": {
+              "raw": "{{orderServiceUrl}}/cart/{{sessionId}}/items",
+              "host": ["{{orderServiceUrl}}"],
+              "path": ["cart", "{{sessionId}}", "items"]
+            },
+            "description": "Добавить 2 шт. продукта #1. line_total = price × qty."
+          }
+        },
+        {
+          "name": "POST /cart/{sessionId}/items — добавить товар #3",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"productId\": 3,\n  \"qty\": 1\n}"
+            },
+            "url": {
+              "raw": "{{orderServiceUrl}}/cart/{{sessionId}}/items",
+              "host": ["{{orderServiceUrl}}"],
+              "path": ["cart", "{{sessionId}}", "items"]
+            }
+          }
+        },
+        {
+          "name": "PATCH /cart/{sessionId}/items/{cartItemId} — изменить qty",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));",
+                  "pm.test('qty updated to 3', () => pm.expect(pm.response.json().data.qty).to.equal(3));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "PATCH",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"qty\": 3\n}"
+            },
+            "url": {
+              "raw": "{{orderServiceUrl}}/cart/{{sessionId}}/items/{{cartItemId}}",
+              "host": ["{{orderServiceUrl}}"],
+              "path": ["cart", "{{sessionId}}", "items", "{{cartItemId}}"]
+            }
+          }
+        },
+        {
+          "name": "GET /cart/{sessionId} — корзина с товарами",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));",
+                  "pm.test('2 items in cart', () => pm.expect(pm.response.json().data.items.length).to.equal(2));",
+                  "pm.test('Total > 0', () => pm.expect(pm.response.json().data.total).to.be.above(0));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{orderServiceUrl}}/cart/{{sessionId}}",
+              "host": ["{{orderServiceUrl}}"],
+              "path": ["cart", "{{sessionId}}"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Заказы (гость)",
+      "item": [
+        {
+          "name": "POST /orders — оформить заказ (courier)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 201', () => pm.response.to.have.status(201));",
+                  "const data = pm.response.json().data;",
+                  "pm.collectionVariables.set('orderId', data.id);",
+                  "pm.test('Has orderNumber', () => pm.expect(data.orderNumber).to.match(/^ORD-/));",
+                  "pm.test('Status is new', () => pm.expect(data.status).to.equal('new'));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"sessionId\": \"{{sessionId}}\",\n  \"customerName\": \"Иван Петров\",\n  \"phone\": \"+7-900-123-45-67\",\n  \"email\": \"ivan.petrov@example.com\",\n  \"deliveryType\": \"courier\",\n  \"address\": \"г. Омск, ул. Лампочная, д. 10\",\n  \"comment\": \"Позвонить за час до доставки\"\n}"
+            },
+            "url": {
+              "raw": "{{orderServiceUrl}}/orders",
+              "host": ["{{orderServiceUrl}}"],
+              "path": ["orders"]
+            },
+            "description": "Оформить заказ с доставкой курьером. После создания корзина очищается, остаток в product-service уменьшается."
+          }
+        },
+        {
+          "name": "GET /orders/{orderId} — страница подтверждения",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));",
+                  "const data = pm.response.json().data;",
+                  "pm.test('Has items', () => pm.expect(data.items.length).to.be.above(0));",
+                  "pm.test('Has history entry', () => pm.expect(data.history.length).to.equal(1));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{orderServiceUrl}}/orders/{{orderId}}",
+              "host": ["{{orderServiceUrl}}"],
+              "path": ["orders", "{{orderId}}"]
+            },
+            "description": "Страница подтверждения заказа. Возвращает полные данные с позициями и историей статусов."
+          }
+        },
+        {
+          "name": "POST /orders — 400 EMPTY_CART (пустая корзина)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 400', () => pm.response.to.have.status(400));",
+                  "pm.test('Code EMPTY_CART', () => pm.expect(pm.response.json().code).to.equal('EMPTY_CART'));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"sessionId\": \"{{sessionId}}\",\n  \"customerName\": \"Тест\",\n  \"phone\": \"+7-999-000-00-00\",\n  \"email\": \"test@test.com\",\n  \"deliveryType\": \"pickup\"\n}"
+            },
+            "url": {
+              "raw": "{{orderServiceUrl}}/orders",
+              "host": ["{{orderServiceUrl}}"],
+              "path": ["orders"]
+            },
+            "description": "Негативный сценарий: заказ из пустой корзины → 400 EMPTY_CART."
+          }
+        },
+        {
+          "name": "POST /orders — 400 ADDRESS_REQUIRED (courier без адреса)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 400', () => pm.response.to.have.status(400));",
+                  "pm.test('Code ADDRESS_REQUIRED', () => pm.expect(pm.response.json().code).to.equal('ADDRESS_REQUIRED'));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"sessionId\": \"fresh-session-0000-0000-000000000002\",\n  \"customerName\": \"Тест\",\n  \"phone\": \"+7-999-000-00-00\",\n  \"email\": \"test@test.com\",\n  \"deliveryType\": \"courier\"\n}"
+            },
+            "url": {
+              "raw": "{{orderServiceUrl}}/orders",
+              "host": ["{{orderServiceUrl}}"],
+              "path": ["orders"]
+            },
+            "description": "Негативный сценарий: courier без address → 400 ADDRESS_REQUIRED."
+          }
+        }
+      ]
+    },
+    {
+      "name": "Admin — Управление заказами",
+      "item": [
+        {
+          "name": "GET /admin/orders — список заказов",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));",
+                  "pm.test('Has data and meta', () => {",
+                  "  const body = pm.response.json();",
+                  "  pm.expect(body.data).to.be.an('array');",
+                  "  pm.expect(body.meta).to.have.property('total');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{orderServiceUrl}}/admin/orders?page=1&limit=20",
+              "host": ["{{orderServiceUrl}}"],
+              "path": ["admin", "orders"],
+              "query": [
+                { "key": "page", "value": "1" },
+                { "key": "limit", "value": "20" }
+              ]
+            }
+          }
+        },
+        {
+          "name": "GET /admin/orders (фильтр по статусу)",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{orderServiceUrl}}/admin/orders?status=new&page=1&limit=20",
+              "host": ["{{orderServiceUrl}}"],
+              "path": ["admin", "orders"],
+              "query": [
+                { "key": "status", "value": "new" },
+                { "key": "page", "value": "1" },
+                { "key": "limit", "value": "20" }
+              ]
+            }
+          }
+        },
+        {
+          "name": "GET /admin/orders/{orderId} — карточка с историей",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));",
+                  "pm.test('Has history', () => pm.expect(pm.response.json().data.history).to.be.an('array'));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{orderServiceUrl}}/admin/orders/{{orderId}}",
+              "host": ["{{orderServiceUrl}}"],
+              "path": ["admin", "orders", "{{orderId}}"]
+            }
+          }
+        },
+        {
+          "name": "PATCH /admin/orders/{orderId}/status — new → confirmed",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));",
+                  "pm.test('Status is confirmed', () => pm.expect(pm.response.json().data.status).to.equal('confirmed'));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "PATCH",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"confirmed\",\n  \"comment\": \"Заказ подтверждён оператором\"\n}"
+            },
+            "url": {
+              "raw": "{{orderServiceUrl}}/admin/orders/{{orderId}}/status",
+              "host": ["{{orderServiceUrl}}"],
+              "path": ["admin", "orders", "{{orderId}}", "status"]
+            }
+          }
+        },
+        {
+          "name": "PATCH /admin/orders/{orderId}/status — confirmed → packing",
+          "request": {
+            "method": "PATCH",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"packing\",\n  \"comment\": \"Передано на склад\"\n}"
+            },
+            "url": {
+              "raw": "{{orderServiceUrl}}/admin/orders/{{orderId}}/status",
+              "host": ["{{orderServiceUrl}}"],
+              "path": ["admin", "orders", "{{orderId}}", "status"]
+            }
+          }
+        },
+        {
+          "name": "PATCH /admin/orders/{orderId}/status — 400 INVALID_STATUS_TRANSITION",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 400', () => pm.response.to.have.status(400));",
+                  "pm.test('Code INVALID_STATUS_TRANSITION', () => pm.expect(pm.response.json().code).to.equal('INVALID_STATUS_TRANSITION'));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "PATCH",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"new\",\n  \"comment\": \"попытка вернуть в new\"\n}"
+            },
+            "url": {
+              "raw": "{{orderServiceUrl}}/admin/orders/{{orderId}}/status",
+              "host": ["{{orderServiceUrl}}"],
+              "path": ["admin", "orders", "{{orderId}}", "status"]
+            },
+            "description": "Негативный сценарий: недопустимый переход статуса → 400."
+          }
+        }
+      ]
+    }
+  ]
+}

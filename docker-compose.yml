@@ -1,0 +1,59 @@
+services:
+  db-product:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_DB: product_db
+      POSTGRES_USER: app
+      POSTGRES_PASSWORD: secret
+    ports:
+      - "5433:5432"
+    volumes:
+      - product-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U app -d product_db"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  db-order:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_DB: order_db
+      POSTGRES_USER: app
+      POSTGRES_PASSWORD: secret
+    ports:
+      - "5434:5432"
+    volumes:
+      - order-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U app -d order_db"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  product-service:
+    build: ./product-service
+    ports:
+      - "3001:8000"
+    depends_on:
+      db-product:
+        condition: service_healthy
+    environment:
+      DATABASE_URL: postgresql+asyncpg://app:secret@db-product/product_db
+
+  order-service:
+    build: ./order-service
+    ports:
+      - "3002:8000"
+    depends_on:
+      db-order:
+        condition: service_healthy
+      product-service:
+        condition: service_started
+    environment:
+      DATABASE_URL: postgresql+asyncpg://app:secret@db-order/order_db
+      PRODUCT_SERVICE_URL: http://product-service:8000
+
+volumes:
+  product-data:
+  order-data:

@@ -1,0 +1,211 @@
+{
+  "info": {
+    "_postman_id": "7fb35ec1-6722-4b4d-bf7d-06f79a31f001",
+    "name": "Lamp Factory / Product Service",
+    "description": "Коллекция product-service. Публичные endpoint доступны без авторизации. Административные endpoint требуют Bearer JWT в {{adminToken}}.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    { "key": "productServiceUrl", "value": "http://localhost:3001" },
+    { "key": "adminToken", "value": "admin-jwt-token" },
+    { "key": "productId", "value": "1" },
+    { "key": "categoryId", "value": "1" }
+  ],
+  "item": [
+    {
+      "name": "Public Catalog",
+      "item": [
+        {
+          "name": "GET /categories",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{productServiceUrl}}/categories",
+              "host": ["{{productServiceUrl}}"],
+              "path": ["categories"]
+            },
+            "description": "Список активных категорий. Успех 200: {data:[{id,name,slug}]}"
+          }
+        },
+        {
+          "name": "GET /products",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{productServiceUrl}}/products?search=LED&categoryId=1&baseType=E27&wattage=9&colorTemperatureK=4000&inStock=true&sortBy=price&sortDir=asc&page=1&limit=12",
+              "host": ["{{productServiceUrl}}"],
+              "path": ["products"],
+              "query": [
+                { "key": "search", "value": "LED" },
+                { "key": "categoryId", "value": "1" },
+                { "key": "baseType", "value": "E27" },
+                { "key": "wattage", "value": "9" },
+                { "key": "colorTemperatureK", "value": "4000" },
+                { "key": "inStock", "value": "true" },
+                { "key": "sortBy", "value": "price" },
+                { "key": "sortDir", "value": "asc" },
+                { "key": "page", "value": "1" },
+                { "key": "limit", "value": "12" }
+              ]
+            },
+            "description": "Каталог с фильтрами и сортировкой. Успех 200: {data:[...],meta:{page,limit,total}}"
+          }
+        },
+        {
+          "name": "GET /products/{id}",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{productServiceUrl}}/products/{{productId}}",
+              "host": ["{{productServiceUrl}}"],
+              "path": ["products", "{{productId}}"]
+            },
+            "description": "Карточка товара. Успех 200: {data:{id,sku,name,description,category,price,stockQty,baseType,wattage,colorTemperatureK,luminousFluxLm,images}}. Ошибка 404: {code:\"PRODUCT_NOT_FOUND\",message,details}"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Admin Catalog",
+      "item": [
+        {
+          "name": "POST /products",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [{ "key": "token", "value": "{{adminToken}}", "type": "string" }]
+            },
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"sku\": \"STD-E27-11-50\",\n  \"name\": \"LED A60 11Вт 5000K\",\n  \"slug\": \"led-a60-11w-5000k\",\n  \"description\": \"Новая лампа для офисных помещений.\",\n  \"categoryId\": 1,\n  \"price\": 18900,\n  \"stockQty\": 25,\n  \"baseType\": \"E27\",\n  \"wattage\": 11,\n  \"colorTemperatureK\": 5000,\n  \"luminousFluxLm\": 1100,\n  \"isActive\": true,\n  \"images\": [{\"imageUrl\": \"https://cdn.example.com/products/std-e27-11-50/main.jpg\", \"altText\": \"LED A60 11Вт\"}]\n}"
+            },
+            "url": {
+              "raw": "{{productServiceUrl}}/products",
+              "host": ["{{productServiceUrl}}"],
+              "path": ["products"]
+            },
+            "description": "Создание товара. Успех 201: {data:{id,sku,name}}. Ошибки: 400, 401, 409."
+          }
+        },
+        {
+          "name": "PATCH /products/{id}",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [{ "key": "token", "value": "{{adminToken}}", "type": "string" }]
+            },
+            "method": "PATCH",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"LED A60 9Вт 4000K Plus\",\n  \"price\": 16400,\n  \"description\": \"Обновленное описание товара.\",\n  \"isActive\": true\n}"
+            },
+            "url": {
+              "raw": "{{productServiceUrl}}/products/{{productId}}",
+              "host": ["{{productServiceUrl}}"],
+              "path": ["products", "{{productId}}"]
+            },
+            "description": "Обновление товара. Успех 200: {data:{id,name,price}}. Ошибки: 400, 401, 404, 409."
+          }
+        },
+        {
+          "name": "PATCH /products/{id}/stock",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [{ "key": "token", "value": "{{adminToken}}", "type": "string" }]
+            },
+            "method": "PATCH",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"stockQty\": 57,\n  \"reason\": \"Поступление на склад\"\n}"
+            },
+            "url": {
+              "raw": "{{productServiceUrl}}/products/{{productId}}/stock",
+              "host": ["{{productServiceUrl}}"],
+              "path": ["products", "{{productId}}", "stock"]
+            },
+            "description": "Обновление остатка. Успех 200: {data:{id,stockQty}}. Ошибки: 400, 401, 404."
+          }
+        },
+        {
+          "name": "DELETE /products/{id}",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [{ "key": "token", "value": "{{adminToken}}", "type": "string" }]
+            },
+            "method": "DELETE",
+            "url": {
+              "raw": "{{productServiceUrl}}/products/{{productId}}",
+              "host": ["{{productServiceUrl}}"],
+              "path": ["products", "{{productId}}"]
+            },
+            "description": "Удаление или мягкая деактивация товара. Успех 204. Ошибки: 401, 404."
+          }
+        },
+        {
+          "name": "POST /categories",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [{ "key": "token", "value": "{{adminToken}}", "type": "string" }]
+            },
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Промышленные лампы\",\n  \"slug\": \"industrial\",\n  \"sortOrder\": 6,\n  \"isActive\": true\n}"
+            },
+            "url": {
+              "raw": "{{productServiceUrl}}/categories",
+              "host": ["{{productServiceUrl}}"],
+              "path": ["categories"]
+            },
+            "description": "Создание категории. Успех 201: {data:{id,name,slug}}. Ошибки: 400, 401, 409."
+          }
+        },
+        {
+          "name": "PATCH /categories/{id}",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [{ "key": "token", "value": "{{adminToken}}", "type": "string" }]
+            },
+            "method": "PATCH",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Филаментные декоративные\",\n  \"sortOrder\": 5\n}"
+            },
+            "url": {
+              "raw": "{{productServiceUrl}}/categories/{{categoryId}}",
+              "host": ["{{productServiceUrl}}"],
+              "path": ["categories", "{{categoryId}}"]
+            },
+            "description": "Обновление категории. Успех 200: {data:{id,name}}. Ошибки: 400, 401, 404, 409."
+          }
+        },
+        {
+          "name": "DELETE /categories/{id}",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [{ "key": "token", "value": "{{adminToken}}", "type": "string" }]
+            },
+            "method": "DELETE",
+            "url": {
+              "raw": "{{productServiceUrl}}/categories/{{categoryId}}",
+              "host": ["{{productServiceUrl}}"],
+              "path": ["categories", "{{categoryId}}"]
+            },
+            "description": "Удаление категории. Успех 204. Ошибка 409: {code:\"CATEGORY_IN_USE\",message,details}. Ошибки: 401, 404."
+          }
+        }
+      ]
+    }
+  ]
+}
