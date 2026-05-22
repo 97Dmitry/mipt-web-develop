@@ -1,10 +1,11 @@
 from contextlib import asynccontextmanager
-from fastapi import FastAPI, Request
-from fastapi.responses import JSONResponse
-from fastapi.middleware.cors import CORSMiddleware
 
-from app.database import engine, Base
-from app.routers import categories, products, internal
+from fastapi import FastAPI, HTTPException, Request
+from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import JSONResponse
+
+from app.database import Base, engine
+from app.routers import categories, internal, products, public
 
 
 @asynccontextmanager
@@ -32,8 +33,6 @@ async def generic_handler(request: Request, exc: Exception):
     )
 
 
-from fastapi import HTTPException
-
 @app.exception_handler(HTTPException)
 async def http_exception_handler(request: Request, exc: HTTPException):
     if isinstance(exc.detail, dict):
@@ -44,6 +43,7 @@ async def http_exception_handler(request: Request, exc: HTTPException):
     )
 
 
+app.include_router(public.router)
 app.include_router(categories.router)
 app.include_router(products.router)
 app.include_router(internal.router)

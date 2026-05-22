@@ -2,15 +2,30 @@
   "info": {
     "_postman_id": "7fb35ec1-6722-4b4d-bf7d-06f79a31f003",
     "name": "Lamp Factory / Admin Panel Service",
-    "description": "Коллекция admin-panel-service. Сервис выдает JWT и предоставляет BFF endpoint для административного SPA-клиента.",
+    "description": "Коллекция admin-panel-service (BFF) оставлена для справки и не используется в текущей реализации ДЗ5, где JWT и admin API реализованы внутри order-service/product-service.",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
   },
   "variable": [
-    { "key": "adminPanelUrl", "value": "http://localhost:3003" },
-    { "key": "adminToken", "value": "admin-jwt-token" },
-    { "key": "productId", "value": "1" },
-    { "key": "categoryId", "value": "1" },
-    { "key": "orderId", "value": "1" }
+    {
+      "key": "adminPanelUrl",
+      "value": "http://localhost:3003"
+    },
+    {
+      "key": "adminToken",
+      "value": "admin-jwt-token"
+    },
+    {
+      "key": "productId",
+      "value": "1"
+    },
+    {
+      "key": "categoryId",
+      "value": "1"
+    },
+    {
+      "key": "orderId",
+      "value": "1"
+    }
   ],
   "item": [
     {
@@ -20,15 +35,25 @@
           "name": "POST /auth/login",
           "request": {
             "method": "POST",
-            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
             "body": {
               "mode": "raw",
               "raw": "{\n  \"login\": \"admin\",\n  \"password\": \"Admin123!\"\n}"
             },
             "url": {
               "raw": "{{adminPanelUrl}}/auth/login",
-              "host": ["{{adminPanelUrl}}"],
-              "path": ["auth", "login"]
+              "host": [
+                "{{adminPanelUrl}}"
+              ],
+              "path": [
+                "auth",
+                "login"
+              ]
             },
             "description": "Логин администратора. Успех 200: {data:{accessToken,expiresIn,user}}. Ошибка 401: INVALID_CREDENTIALS."
           }
@@ -38,13 +63,24 @@
           "request": {
             "auth": {
               "type": "bearer",
-              "bearer": [{ "key": "token", "value": "{{adminToken}}", "type": "string" }]
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{adminToken}}",
+                  "type": "string"
+                }
+              ]
             },
             "method": "GET",
             "url": {
               "raw": "{{adminPanelUrl}}/auth/me",
-              "host": ["{{adminPanelUrl}}"],
-              "path": ["auth", "me"]
+              "host": [
+                "{{adminPanelUrl}}"
+              ],
+              "path": [
+                "auth",
+                "me"
+              ]
             },
             "description": "Данные текущего администратора. Успех 200: {data:{id,login,fullName,role}}. Ошибки: 401."
           }
@@ -54,13 +90,24 @@
           "request": {
             "auth": {
               "type": "bearer",
-              "bearer": [{ "key": "token", "value": "{{adminToken}}", "type": "string" }]
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{adminToken}}",
+                  "type": "string"
+                }
+              ]
             },
             "method": "POST",
             "url": {
               "raw": "{{adminPanelUrl}}/auth/logout",
-              "host": ["{{adminPanelUrl}}"],
-              "path": ["auth", "logout"]
+              "host": [
+                "{{adminPanelUrl}}"
+              ],
+              "path": [
+                "auth",
+                "logout"
+              ]
             },
             "description": "Логический logout. Успех 204. Клиент удаляет токен."
           }
@@ -75,13 +122,24 @@
           "request": {
             "auth": {
               "type": "bearer",
-              "bearer": [{ "key": "token", "value": "{{adminToken}}", "type": "string" }]
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{adminToken}}",
+                  "type": "string"
+                }
+              ]
             },
             "method": "GET",
             "url": {
               "raw": "{{adminPanelUrl}}/dashboard/summary",
-              "host": ["{{adminPanelUrl}}"],
-              "path": ["dashboard", "summary"]
+              "host": [
+                "{{adminPanelUrl}}"
+              ],
+              "path": [
+                "dashboard",
+                "summary"
+              ]
             },
             "description": "Агрегированные метрики админки. Успех 200: {data:{activeProducts,lowStockProducts,newOrders,processingOrders}}."
           }
@@ -96,18 +154,41 @@
           "request": {
             "auth": {
               "type": "bearer",
-              "bearer": [{ "key": "token", "value": "{{adminToken}}", "type": "string" }]
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{adminToken}}",
+                  "type": "string"
+                }
+              ]
             },
             "method": "GET",
             "url": {
               "raw": "{{adminPanelUrl}}/catalog/products?search=LED&categoryId=1&page=1&limit=20",
-              "host": ["{{adminPanelUrl}}"],
-              "path": ["catalog", "products"],
+              "host": [
+                "{{adminPanelUrl}}"
+              ],
+              "path": [
+                "catalog",
+                "products"
+              ],
               "query": [
-                { "key": "search", "value": "LED" },
-                { "key": "categoryId", "value": "1" },
-                { "key": "page", "value": "1" },
-                { "key": "limit", "value": "20" }
+                {
+                  "key": "search",
+                  "value": "LED"
+                },
+                {
+                  "key": "categoryId",
+                  "value": "1"
+                },
+                {
+                  "key": "page",
+                  "value": "1"
+                },
+                {
+                  "key": "limit",
+                  "value": "20"
+                }
               ]
             },
             "description": "Список товаров для таблицы админки. Успех 200: {data:[...],meta:{page,limit,total}}."
@@ -118,18 +199,34 @@
           "request": {
             "auth": {
               "type": "bearer",
-              "bearer": [{ "key": "token", "value": "{{adminToken}}", "type": "string" }]
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{adminToken}}",
+                  "type": "string"
+                }
+              ]
             },
             "method": "POST",
-            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
             "body": {
               "mode": "raw",
               "raw": "{\n  \"sku\": \"FLM-E27-12-22\",\n  \"name\": \"Filament Globe 12Вт 2200K\",\n  \"slug\": \"filament-globe-12w-2200k\",\n  \"description\": \"Декоративная лампа для кафе и ресторанов.\",\n  \"categoryId\": 5,\n  \"price\": 32900,\n  \"stockQty\": 9,\n  \"baseType\": \"E27\",\n  \"wattage\": 12,\n  \"colorTemperatureK\": 2200,\n  \"luminousFluxLm\": 1120,\n  \"isActive\": true,\n  \"images\": [{\"imageUrl\": \"https://cdn.example.com/products/flm-e27-12-22/main.jpg\", \"altText\": \"Filament Globe 12Вт\"}]\n}"
             },
             "url": {
               "raw": "{{adminPanelUrl}}/catalog/products",
-              "host": ["{{adminPanelUrl}}"],
-              "path": ["catalog", "products"]
+              "host": [
+                "{{adminPanelUrl}}"
+              ],
+              "path": [
+                "catalog",
+                "products"
+              ]
             },
             "description": "Создание товара через BFF. Успех 201: {data:{id,sku,name}}. Ошибки: 400, 401, 409."
           }
@@ -139,18 +236,35 @@
           "request": {
             "auth": {
               "type": "bearer",
-              "bearer": [{ "key": "token", "value": "{{adminToken}}", "type": "string" }]
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{adminToken}}",
+                  "type": "string"
+                }
+              ]
             },
             "method": "PATCH",
-            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
             "body": {
               "mode": "raw",
               "raw": "{\n  \"price\": 33900,\n  \"stockQty\": 12,\n  \"isActive\": true\n}"
             },
             "url": {
               "raw": "{{adminPanelUrl}}/catalog/products/{{productId}}",
-              "host": ["{{adminPanelUrl}}"],
-              "path": ["catalog", "products", "{{productId}}"]
+              "host": [
+                "{{adminPanelUrl}}"
+              ],
+              "path": [
+                "catalog",
+                "products",
+                "{{productId}}"
+              ]
             },
             "description": "Обновление товара через BFF. Успех 200: {data:{id,price,stockQty}}. Ошибки: 400, 401, 404, 409."
           }
@@ -160,18 +274,36 @@
           "request": {
             "auth": {
               "type": "bearer",
-              "bearer": [{ "key": "token", "value": "{{adminToken}}", "type": "string" }]
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{adminToken}}",
+                  "type": "string"
+                }
+              ]
             },
             "method": "PATCH",
-            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
             "body": {
               "mode": "raw",
               "raw": "{\n  \"stockQty\": 5,\n  \"reason\": \"Ручная корректировка\"\n}"
             },
             "url": {
               "raw": "{{adminPanelUrl}}/catalog/products/{{productId}}/stock",
-              "host": ["{{adminPanelUrl}}"],
-              "path": ["catalog", "products", "{{productId}}", "stock"]
+              "host": [
+                "{{adminPanelUrl}}"
+              ],
+              "path": [
+                "catalog",
+                "products",
+                "{{productId}}",
+                "stock"
+              ]
             },
             "description": "Изменение остатка через BFF. Успех 200: {data:{id,stockQty}}. Ошибки: 400, 401, 404."
           }
@@ -181,13 +313,25 @@
           "request": {
             "auth": {
               "type": "bearer",
-              "bearer": [{ "key": "token", "value": "{{adminToken}}", "type": "string" }]
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{adminToken}}",
+                  "type": "string"
+                }
+              ]
             },
             "method": "DELETE",
             "url": {
               "raw": "{{adminPanelUrl}}/catalog/products/{{productId}}",
-              "host": ["{{adminPanelUrl}}"],
-              "path": ["catalog", "products", "{{productId}}"]
+              "host": [
+                "{{adminPanelUrl}}"
+              ],
+              "path": [
+                "catalog",
+                "products",
+                "{{productId}}"
+              ]
             },
             "description": "Удаление или деактивация товара через BFF. Успех 204. Ошибки: 401, 404."
           }
@@ -197,13 +341,24 @@
           "request": {
             "auth": {
               "type": "bearer",
-              "bearer": [{ "key": "token", "value": "{{adminToken}}", "type": "string" }]
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{adminToken}}",
+                  "type": "string"
+                }
+              ]
             },
             "method": "GET",
             "url": {
               "raw": "{{adminPanelUrl}}/catalog/categories",
-              "host": ["{{adminPanelUrl}}"],
-              "path": ["catalog", "categories"]
+              "host": [
+                "{{adminPanelUrl}}"
+              ],
+              "path": [
+                "catalog",
+                "categories"
+              ]
             },
             "description": "Список категорий для админки. Успех 200: {data:[{id,name,slug,productsCount}]}."
           }
@@ -213,18 +368,34 @@
           "request": {
             "auth": {
               "type": "bearer",
-              "bearer": [{ "key": "token", "value": "{{adminToken}}", "type": "string" }]
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{adminToken}}",
+                  "type": "string"
+                }
+              ]
             },
             "method": "POST",
-            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
             "body": {
               "mode": "raw",
               "raw": "{\n  \"name\": \"Умные лампы\",\n  \"slug\": \"smart-bulbs\",\n  \"sortOrder\": 6,\n  \"isActive\": true\n}"
             },
             "url": {
               "raw": "{{adminPanelUrl}}/catalog/categories",
-              "host": ["{{adminPanelUrl}}"],
-              "path": ["catalog", "categories"]
+              "host": [
+                "{{adminPanelUrl}}"
+              ],
+              "path": [
+                "catalog",
+                "categories"
+              ]
             },
             "description": "Создание категории через BFF. Успех 201: {data:{id,name,slug}}. Ошибки: 400, 401, 409."
           }
@@ -234,18 +405,35 @@
           "request": {
             "auth": {
               "type": "bearer",
-              "bearer": [{ "key": "token", "value": "{{adminToken}}", "type": "string" }]
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{adminToken}}",
+                  "type": "string"
+                }
+              ]
             },
             "method": "PATCH",
-            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
             "body": {
               "mode": "raw",
               "raw": "{\n  \"name\": \"Умные LED-лампы\",\n  \"sortOrder\": 7\n}"
             },
             "url": {
               "raw": "{{adminPanelUrl}}/catalog/categories/{{categoryId}}",
-              "host": ["{{adminPanelUrl}}"],
-              "path": ["catalog", "categories", "{{categoryId}}"]
+              "host": [
+                "{{adminPanelUrl}}"
+              ],
+              "path": [
+                "catalog",
+                "categories",
+                "{{categoryId}}"
+              ]
             },
             "description": "Обновление категории через BFF. Успех 200: {data:{id,name}}. Ошибки: 400, 401, 404, 409."
           }
@@ -255,13 +443,25 @@
           "request": {
             "auth": {
               "type": "bearer",
-              "bearer": [{ "key": "token", "value": "{{adminToken}}", "type": "string" }]
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{adminToken}}",
+                  "type": "string"
+                }
+              ]
             },
             "method": "DELETE",
             "url": {
               "raw": "{{adminPanelUrl}}/catalog/categories/{{categoryId}}",
-              "host": ["{{adminPanelUrl}}"],
-              "path": ["catalog", "categories", "{{categoryId}}"]
+              "host": [
+                "{{adminPanelUrl}}"
+              ],
+              "path": [
+                "catalog",
+                "categories",
+                "{{categoryId}}"
+              ]
             },
             "description": "Удаление категории через BFF. Успех 204. Ошибка 409: CATEGORY_IN_USE. Ошибки: 401, 404."
           }
@@ -276,17 +476,36 @@
           "request": {
             "auth": {
               "type": "bearer",
-              "bearer": [{ "key": "token", "value": "{{adminToken}}", "type": "string" }]
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{adminToken}}",
+                  "type": "string"
+                }
+              ]
             },
             "method": "GET",
             "url": {
               "raw": "{{adminPanelUrl}}/orders?status=new&page=1&limit=20",
-              "host": ["{{adminPanelUrl}}"],
-              "path": ["orders"],
+              "host": [
+                "{{adminPanelUrl}}"
+              ],
+              "path": [
+                "orders"
+              ],
               "query": [
-                { "key": "status", "value": "new" },
-                { "key": "page", "value": "1" },
-                { "key": "limit", "value": "20" }
+                {
+                  "key": "status",
+                  "value": "new"
+                },
+                {
+                  "key": "page",
+                  "value": "1"
+                },
+                {
+                  "key": "limit",
+                  "value": "20"
+                }
               ]
             },
             "description": "Список заказов для таблицы админки. Успех 200: {data:[...],meta:{page,limit,total}}."
@@ -297,13 +516,24 @@
           "request": {
             "auth": {
               "type": "bearer",
-              "bearer": [{ "key": "token", "value": "{{adminToken}}", "type": "string" }]
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{adminToken}}",
+                  "type": "string"
+                }
+              ]
             },
             "method": "GET",
             "url": {
               "raw": "{{adminPanelUrl}}/orders/{{orderId}}",
-              "host": ["{{adminPanelUrl}}"],
-              "path": ["orders", "{{orderId}}"]
+              "host": [
+                "{{adminPanelUrl}}"
+              ],
+              "path": [
+                "orders",
+                "{{orderId}}"
+              ]
             },
             "description": "Карточка заказа. Успех 200: {data:{orderNumber,status,customer,delivery,items,history}}. Ошибки: 401, 404."
           }
@@ -313,18 +543,35 @@
           "request": {
             "auth": {
               "type": "bearer",
-              "bearer": [{ "key": "token", "value": "{{adminToken}}", "type": "string" }]
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{adminToken}}",
+                  "type": "string"
+                }
+              ]
             },
             "method": "PATCH",
-            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
             "body": {
               "mode": "raw",
               "raw": "{\n  \"status\": \"packing\",\n  \"comment\": \"Собирается на складе\"\n}"
             },
             "url": {
               "raw": "{{adminPanelUrl}}/orders/{{orderId}}/status",
-              "host": ["{{adminPanelUrl}}"],
-              "path": ["orders", "{{orderId}}", "status"]
+              "host": [
+                "{{adminPanelUrl}}"
+              ],
+              "path": [
+                "orders",
+                "{{orderId}}",
+                "status"
+              ]
             },
             "description": "Изменение статуса заказа через BFF. Успех 200: {data:{id,status}}. Ошибка 400: INVALID_STATUS_TRANSITION. Ошибки: 401, 404."
           }

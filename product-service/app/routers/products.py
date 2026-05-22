@@ -1,23 +1,24 @@
 from fastapi import APIRouter, Depends, HTTPException, Query
-from sqlalchemy import select, func, or_
+from slugify import slugify
+from sqlalchemy import func, or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
-from slugify import slugify
 
+from app.auth import require_admin_jwt
 from app.database import get_db
-from app.models import Product, ProductImage, Category
-from app.schemas import (
-    ProductCreate, ProductUpdate, StockUpdate,
-    ProductResponse, data_response, list_response,
-)
+from app.models import Category, Product, ProductImage
+from app.schemas import ProductCreate, ProductResponse, ProductUpdate, StockUpdate, data_response, list_response
 
-router = APIRouter(prefix="/products", tags=["products"])
+router = APIRouter(
+    prefix="/products",
+    tags=["products"],
+    dependencies=[Depends(require_admin_jwt)],
+)
 
 
 async def _get_or_404(db: AsyncSession, product_id: int) -> Product:
     result = await db.execute(
-        select(Product).options(selectinload(Product.images), selectinload(Product.category))
-        .where(Product.id == product_id)
+        select(Product).options(selectinload(Product.images), selectinload(Product.category)).where(Product.id == product_id)
     )
     p = result.scalar_one_or_none()
     if p is None:
@@ -54,11 +55,7 @@ async def list_products(
     limit: int = Query(12, ge=1, le=100),
     db: AsyncSession = Depends(get_db),
 ):
-    q = (
-        select(Product)
-        .options(selectinload(Product.images), selectinload(Product.category))
-        .where(Product.is_active == True)
-    )
+    q = select(Product).options(selectinload(Product.images), selectinload(Product.category))
 
     if search:
         pattern = f"%{search}%"
@@ -130,18 +127,19 @@ async def create_product(body: ProductCreate, db: AsyncSession = Depends(get_db)
     await db.flush()
 
     for i, img in enumerate(body.images):
-        db.add(ProductImage(
-            product_id=p.id,
-            image_url=img.imageUrl,
-            alt_text=img.altText,
-            sort_order=img.sortOrder if img.sortOrder else i,
-        ))
+        db.add(
+            ProductImage(
+                product_id=p.id,
+                image_url=img.imageUrl,
+                alt_text=img.altText,
+                sort_order=img.sortOrder if img.sortOrder else i,
+            )
+        )
 
     await db.commit()
 
     result = await db.execute(
-        select(Product).options(selectinload(Product.images), selectinload(Product.category))
-        .where(Product.id == p.id)
+        select(Product).options(selectinload(Product.images), selectinload(Product.category)).where(Product.id == p.id)
     )
     p = result.scalar_one()
     return data_response(ProductResponse.from_orm(p))
@@ -157,7 +155,7 @@ async def update_product(product_id: int, body: ProductUpdate, db: AsyncSession 
     if body.name is not None:
         p.name = body.name
         if new_slug is None and body.slug is None:
-            pass  # keep existing slug
+            pass
     if body.slug is not None:
         p.slug = body.slug
     if body.description is not None:
@@ -191,18 +189,19 @@ async def update_product(product_id: int, body: ProductUpdate, db: AsyncSession 
             await db.delete(img)
         await db.flush()
         for i, img in enumerate(body.images):
-            db.add(ProductImage(
-                product_id=p.id,
-                image_url=img.imageUrl,
-                alt_text=img.altText,
-                sort_order=img.sortOrder if img.sortOrder else i,
-            ))
+            db.add(
+                ProductImage(
+                    product_id=p.id,
+                    image_url=img.imageUrl,
+                    alt_text=img.altText,
+                    sort_order=img.sortOrder if img.sortOrder else i,
+                )
+            )
 
     await db.commit()
 
     result = await db.execute(
-        select(Product).options(selectinload(Product.images), selectinload(Product.category))
-        .where(Product.id == product_id)
+        select(Product).options(selectinload(Product.images), selectinload(Product.category)).where(Product.id == product_id)
     )
     p = result.scalar_one()
     return data_response(ProductResponse.from_orm(p))

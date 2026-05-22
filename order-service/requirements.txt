@@ -5,3 +5,5 @@ asyncpg==0.30.0
 alembic==1.14.0
 pydantic[email]==2.10.2
 httpx==0.28.0
+
+PyJWT==2.10.1

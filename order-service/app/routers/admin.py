@@ -1,19 +1,29 @@
 from datetime import datetime
+
 from fastapi import APIRouter, Depends, HTTPException, Query
-from sqlalchemy import select, func, or_
+from sqlalchemy import func, or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
+from app.auth import AdminPrincipal, require_admin_jwt
 from app.database import get_db
 from app.models import Order, OrderStatusHistory
 from app.schemas import (
-    UpdateStatusRequest, OrderResponse, OrderListItem,
-    OrderItemResponse, StatusHistoryEntry,
-    data_response, list_response,
+    OrderItemResponse,
+    OrderListItem,
+    OrderResponse,
+    StatusHistoryEntry,
+    UpdateStatusRequest,
+    data_response,
+    list_response,
 )
 from app.services.order_logic import validate_transition
 
-router = APIRouter(prefix="/admin/orders", tags=["admin"])
+router = APIRouter(
+    prefix="/admin/orders",
+    tags=["admin"],
+    dependencies=[Depends(require_admin_jwt)],
+)
 
 
 def _build_order_response(order: Order) -> OrderResponse:
@@ -82,11 +92,13 @@ async def list_orders(
         q = q.where(Order.created_at <= dateTo)
     if search:
         pattern = f"%{search}%"
-        q = q.where(or_(
-            Order.order_number.ilike(pattern),
-            Order.phone.ilike(pattern),
-            Order.email.ilike(pattern),
-        ))
+        q = q.where(
+            or_(
+                Order.order_number.ilike(pattern),
+                Order.phone.ilike(pattern),
+                Order.email.ilike(pattern),
+            )
+        )
 
     count_q = select(func.count()).select_from(q.subquery())
     total = (await db.execute(count_q)).scalar_one()
@@ -114,34 +126,46 @@ async def list_orders(
 @router.get("/{order_id}")
 async def get_order(order_id: int, db: AsyncSession = Depends(get_db)):
     result = await db.execute(
-        select(Order).options(selectinload(Order.items), selectinload(Order.history))
+        select(Order)
+        .options(selectinload(Order.items), selectinload(Order.history))
         .where(Order.id == order_id)
     )
     order = result.scalar_one_or_none()
     if order is None:
-        raise HTTPException(status_code=404, detail={"code": "ORDER_NOT_FOUND", "message": "Order not found", "details": {}})
+        raise HTTPException(
+            status_code=404,
+            detail={"code": "ORDER_NOT_FOUND", "message": "Order not found", "details": {}},
+        )
     return data_response(_build_order_response(order))
 
 
 @router.patch("/{order_id}/status")
-async def update_status(order_id: int, body: UpdateStatusRequest, db: AsyncSession = Depends(get_db)):
-    result = await db.execute(
-        select(Order).options(selectinload(Order.history)).where(Order.id == order_id)
-    )
+async def update_status(
+    order_id: int,
+    body: UpdateStatusRequest,
+    db: AsyncSession = Depends(get_db),
+    principal: AdminPrincipal = Depends(require_admin_jwt),
+):
+    result = await db.execute(select(Order).options(selectinload(Order.history)).where(Order.id == order_id))
     order = result.scalar_one_or_none()
     if order is None:
-        raise HTTPException(status_code=404, detail={"code": "ORDER_NOT_FOUND", "message": "Order not found", "details": {}})
+        raise HTTPException(
+            status_code=404,
+            detail={"code": "ORDER_NOT_FOUND", "message": "Order not found", "details": {}},
+        )
 
     validate_transition(order.status, body.status)
 
     from_status = order.status
     order.status = body.status
-    db.add(OrderStatusHistory(
-        order_id=order.id,
-        from_status=from_status,
-        to_status=body.status,
-        changed_by="admin",
-        comment=body.comment,
-    ))
+    db.add(
+        OrderStatusHistory(
+            order_id=order.id,
+            from_status=from_status,
+            to_status=body.status,
+            changed_by=principal.login,
+            comment=body.comment,
+        )
+    )
     await db.commit()
     return data_response({"id": order.id, "status": order.status})

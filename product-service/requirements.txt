@@ -6,3 +6,5 @@ alembic==1.14.0
 pydantic[email]==2.10.2
 python-slugify==8.0.4
 httpx==0.28.0
+
+PyJWT==2.10.1

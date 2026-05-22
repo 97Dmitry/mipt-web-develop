@@ -1,13 +1,18 @@
 from fastapi import APIRouter, Depends, HTTPException
-from sqlalchemy import select, func
-from sqlalchemy.ext.asyncio import AsyncSession
 from slugify import slugify
+from sqlalchemy import func, select
+from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.auth import require_admin_jwt
 from app.database import get_db
 from app.models import Category, Product
-from app.schemas import CategoryCreate, CategoryUpdate, CategoryResponse, data_response, list_response
+from app.schemas import CategoryCreate, CategoryResponse, CategoryUpdate, data_response, list_response
 
-router = APIRouter(prefix="/categories", tags=["categories"])
+router = APIRouter(
+    prefix="/categories",
+    tags=["categories"],
+    dependencies=[Depends(require_admin_jwt)],
+)
 
 
 async def _get_or_404(db: AsyncSession, cat_id: int) -> Category:
@@ -34,9 +39,7 @@ async def _check_unique(db: AsyncSession, name: str | None, slug: str | None, ex
 
 @router.get("")
 async def list_categories(db: AsyncSession = Depends(get_db)):
-    result = await db.execute(
-        select(Category).where(Category.is_active == True).order_by(Category.sort_order, Category.id)
-    )
+    result = await db.execute(select(Category).order_by(Category.sort_order, Category.id))
     cats = result.scalars().all()
     return list_response([CategoryResponse.model_validate(c) for c in cats], page=1, limit=len(cats), total=len(cats))
 
@@ -45,12 +48,7 @@ async def list_categories(db: AsyncSession = Depends(get_db)):
 async def create_category(body: CategoryCreate, db: AsyncSession = Depends(get_db)):
     slug = body.slug or slugify(body.name)
     await _check_unique(db, body.name, slug)
-    cat = Category(
-        name=body.name,
-        slug=slug,
-        sort_order=body.sort_order,
-        is_active=body.is_active,
-    )
+    cat = Category(name=body.name, slug=slug, sort_order=body.sort_order, is_active=body.is_active)
     db.add(cat)
     await db.commit()
     await db.refresh(cat)
@@ -76,9 +74,16 @@ async def update_category(cat_id: int, body: CategoryUpdate, db: AsyncSession = 
 
 @router.delete("/{cat_id}", status_code=204)
 async def delete_category(cat_id: int, db: AsyncSession = Depends(get_db)):
-    cat = await _get_or_404(db, cat_id)
+    category = await _get_or_404(db, cat_id)
     count = (await db.execute(select(func.count()).select_from(Product).where(Product.category_id == cat_id))).scalar_one()
     if count > 0:
-        raise HTTPException(status_code=409, detail={"code": "CATEGORY_IN_USE", "message": "Category has associated products", "details": {"product_count": count}})
-    await db.delete(cat)
+        raise HTTPException(
+            status_code=409,
+            detail={
+                "code": "CATEGORY_IN_USE",
+                "message": "Category has associated products",
+                "details": {"product_count": count},
+            },
+        )
+    await db.delete(category)
     await db.commit()
