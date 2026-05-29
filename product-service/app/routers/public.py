@@ -17,7 +17,7 @@ async def list_categories(db: AsyncSession = Depends(get_db)):
     )
     categories = result.scalars().all()
     return list_response(
-        [CategoryResponse.model_validate(category) for category in categories],
+        [CategoryResponse.from_orm_obj(category) for category in categories],
         page=1,
         limit=len(categories),
         total=len(categories),

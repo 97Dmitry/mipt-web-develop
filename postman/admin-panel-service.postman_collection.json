@@ -2,7 +2,7 @@
   "info": {
     "_postman_id": "7fb35ec1-6722-4b4d-bf7d-06f79a31f003",
     "name": "Lamp Factory / Admin Panel Service",
-    "description": "Коллекция admin-panel-service (BFF) оставлена для справки и не используется в текущей реализации ДЗ5, где JWT и admin API реализованы внутри order-service/product-service.",
+    "description": "Коллекция admin-panel-service (BFF). Сервис выдает JWT менеджера и проксирует административные операции каталога, категорий и заказов в доменные сервисы.",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
   },
   "variable": [

@@ -1,18 +1,13 @@
 import os
-import secrets
 from dataclasses import dataclass
-from datetime import datetime, timedelta, timezone
 
 import jwt
 from fastapi import Header, HTTPException
 
 
-ADMIN_LOGIN = os.environ.get("ADMIN_LOGIN", "admin")
-ADMIN_PASSWORD = os.environ.get("ADMIN_PASSWORD", "Admin123!")
 ADMIN_FULL_NAME = os.environ.get("ADMIN_FULL_NAME", "Администратор")
 JWT_SECRET = os.environ.get("JWT_SECRET", "change-me-in-env")
 JWT_ALG = os.environ.get("JWT_ALG", "HS256")
-JWT_EXPIRES_MIN = int(os.environ.get("JWT_EXPIRES_MIN", "60"))
 
 
 @dataclass
@@ -24,24 +19,6 @@ class AdminPrincipal:
 
 def _auth_error(code: str, message: str) -> HTTPException:
     return HTTPException(status_code=401, detail={"code": code, "message": message, "details": {}})
-
-
-def authenticate_admin(login: str, password: str) -> bool:
-    return secrets.compare_digest(login, ADMIN_LOGIN) and secrets.compare_digest(password, ADMIN_PASSWORD)
-
-
-def issue_access_token() -> tuple[str, int]:
-    now = datetime.now(timezone.utc)
-    expires_at = now + timedelta(minutes=JWT_EXPIRES_MIN)
-    payload = {
-        "sub": ADMIN_LOGIN,
-        "role": "admin",
-        "fullName": ADMIN_FULL_NAME,
-        "iat": int(now.timestamp()),
-        "exp": int(expires_at.timestamp()),
-    }
-    token = jwt.encode(payload, JWT_SECRET, algorithm=JWT_ALG)
-    return token, JWT_EXPIRES_MIN * 60
 
 
 def require_admin_jwt(authorization: str | None = Header(default=None)) -> AdminPrincipal:

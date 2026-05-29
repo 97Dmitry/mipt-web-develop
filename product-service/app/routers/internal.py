@@ -3,11 +3,12 @@ from pydantic import BaseModel
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.auth import require_internal_token
 from app.database import get_db
 from app.models import Product
 from app.schemas import data_response
 
-router = APIRouter(prefix="/internal", tags=["internal"])
+router = APIRouter(prefix="/internal", tags=["internal"], dependencies=[Depends(require_internal_token)])
 
 
 class DecrementRequest(BaseModel):

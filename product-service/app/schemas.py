@@ -34,14 +34,25 @@ class CategoryUpdate(BaseModel):
 
 
 class CategoryResponse(BaseModel):
-    model_config = ConfigDict(from_attributes=True)
     id: int
     name: str
     slug: str
-    sort_order: int
-    is_active: bool
-    created_at: datetime
-    updated_at: datetime
+    sortOrder: int
+    isActive: bool
+    createdAt: datetime
+    updatedAt: datetime
+
+    @classmethod
+    def from_orm_obj(cls, obj):
+        return cls(
+            id=obj.id,
+            name=obj.name,
+            slug=obj.slug,
+            sortOrder=obj.sort_order,
+            isActive=obj.is_active,
+            createdAt=obj.created_at,
+            updatedAt=obj.updated_at,
+        )
 
 
 # ---------- Product Image ----------
@@ -88,6 +99,7 @@ class ProductCreate(BaseModel):
 
 
 class ProductUpdate(BaseModel):
+    sku: str | None = None
     name: str | None = None
     slug: str | None = None
     description: str | None = None

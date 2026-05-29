@@ -13,18 +13,25 @@
 
 ## Postman
 
-- `docs/postman/product-service.postman_collection.json`
-- `docs/postman/order-service.postman_collection.json`
-- `docs/postman/admin-panel-service.postman_collection.json`
+- `postman/product-service.postman_collection.json`
+- `postman/order-service.postman_collection.json`
+- `postman/admin-panel-service.postman_collection.json`
 
-## JWT для админки (ДЗ5)
+## Микросервисы
 
-Текущая реализация ДЗ5 не поднимает отдельный `admin-panel-service`: JWT и admin endpoint размещены в `order-service` + `product-service`.
+`docker-compose.yml` поднимает три прикладных микросервиса и три изолированные БД:
 
-- `POST /auth/login` (`order-service`) выдает access token.
+- `product-service` (`localhost:3001`) управляет товарами, категориями, остатками и публичной витриной `/public/*`.
+- `order-service` (`localhost:3002`) управляет гостевой корзиной, оформлением заказа и admin endpoint заказов `/admin/orders*`.
+- `admin-panel-service` (`localhost:3003`) выдает JWT для менеджера и проксирует admin-операции через BFF endpoints `/catalog/*`, `/orders*`, `/dashboard/summary`.
+
+## JWT и внутренние вызовы
+
+- `POST /auth/login` (`admin-panel-service`) выдает access token.
 - `GET /auth/me`, `POST /auth/logout` требуют Bearer token.
-- Все admin-операции в `product-service` и `order-service` требуют Bearer token.
-- Публичная витрина в `product-service` вынесена в `/public/*`.
+- Browser-facing admin frontend должен ходить только в `admin-panel-service`.
+- `product-service` и `order-service` валидируют JWT для своих прямых admin endpoint.
+- `product-service /internal/*` закрыт `X-Internal-Token`; его вызывает только `order-service`.
 
 Переменные окружения (см. `docker-compose.yml`):
 
@@ -34,6 +41,7 @@
 - `JWT_SECRET`
 - `JWT_ALG`
 - `JWT_EXPIRES_MIN`
+- `INTERNAL_API_TOKEN`
 
 ## Авто-заполнение каталога в контейнере
 

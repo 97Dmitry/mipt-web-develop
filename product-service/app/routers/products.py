@@ -49,6 +49,7 @@ async def list_products(
     wattage: int | None = None,
     colorTemperatureK: int | None = None,
     inStock: bool | None = None,
+    isActive: bool | None = None,
     sortBy: str | None = Query(None, pattern="^(name|price)$"),
     sortDir: str | None = Query("asc", pattern="^(asc|desc)$"),
     page: int = Query(1, ge=1),
@@ -72,6 +73,8 @@ async def list_products(
         q = q.where(Product.stock_qty > 0)
     elif inStock is False:
         q = q.where(Product.stock_qty == 0)
+    if isActive is not None:
+        q = q.where(Product.is_active == isActive)
 
     count_q = select(func.count()).select_from(q.subquery())
     total = (await db.execute(count_q)).scalar_one()
@@ -150,8 +153,10 @@ async def update_product(product_id: int, body: ProductUpdate, db: AsyncSession 
     p = await _get_or_404(db, product_id)
 
     new_slug = body.slug
-    await _check_unique(db, None, new_slug, exclude_id=product_id)
+    await _check_unique(db, body.sku, new_slug, exclude_id=product_id)
 
+    if body.sku is not None:
+        p.sku = body.sku
     if body.name is not None:
         p.name = body.name
         if new_slug is None and body.slug is None:

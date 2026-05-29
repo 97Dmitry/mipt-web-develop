@@ -4,18 +4,20 @@ from fastapi import FastAPI, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 
+from app.auth import seed_admin_user
 from app.database import Base, engine
-from app.routers import admin, cart, orders
+from app.routers import auth, catalog, dashboard, orders
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     async with engine.begin() as conn:
         await conn.run_sync(Base.metadata.create_all)
+    await seed_admin_user()
     yield
 
 
-app = FastAPI(title="Order Service", version="1.0.0", lifespan=lifespan)
+app = FastAPI(title="Admin Panel Service", version="1.0.0", lifespan=lifespan)
 
 app.add_middleware(
     CORSMiddleware,
@@ -43,9 +45,10 @@ async def generic_handler(request: Request, exc: Exception):
     )
 
 
-app.include_router(cart.router)
+app.include_router(auth.router)
+app.include_router(catalog.router)
 app.include_router(orders.router)
-app.include_router(admin.router)
+app.include_router(dashboard.router)
 
 
 @app.get("/health")

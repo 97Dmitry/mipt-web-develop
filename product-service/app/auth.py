@@ -8,6 +8,7 @@ from fastapi import Header, HTTPException
 ADMIN_FULL_NAME = os.environ.get("ADMIN_FULL_NAME", "Администратор")
 JWT_SECRET = os.environ.get("JWT_SECRET", "change-me-in-env")
 JWT_ALG = os.environ.get("JWT_ALG", "HS256")
+INTERNAL_API_TOKEN = os.environ.get("INTERNAL_API_TOKEN", "change-me-in-env")
 
 
 @dataclass
@@ -45,3 +46,11 @@ def require_admin_jwt(authorization: str | None = Header(default=None)) -> Admin
         raise _auth_error("FORBIDDEN", "Admin role is required")
 
     return AdminPrincipal(login=login, role=role, full_name=full_name)
+
+
+def require_internal_token(x_internal_token: str | None = Header(default=None, alias="X-Internal-Token")) -> None:
+    if not x_internal_token or x_internal_token != INTERNAL_API_TOKEN:
+        raise HTTPException(
+            status_code=401,
+            detail={"code": "INTERNAL_AUTH_REQUIRED", "message": "Valid internal token is required", "details": {}},
+        )

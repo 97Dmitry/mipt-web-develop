@@ -90,6 +90,7 @@
 - товар с `stock_qty = 0` отображается на витрине как недоступный
 - `slug` должен генерироваться из `name`, но может редактироваться администратором
 - фильтрация каталога опирается на поля `category_id`, `base_type`, `wattage`, `color_temperature_k`, `stock_qty`
+- внутренние endpoint `/internal/*` требуют `X-Internal-Token` и не предназначены для браузера
 
 ## Соответствие прототипам
 
@@ -111,9 +112,9 @@
 
 Публичные:
 
-- `GET /categories`
-- `GET /products`
-- `GET /products/{id}`
+- `GET /public/categories`
+- `GET /public/products`
+- `GET /public/products/{id}`
 
 Административные:
 
@@ -124,6 +125,11 @@
 - `POST /categories`
 - `PATCH /categories/{id}`
 - `DELETE /categories/{id}`
+
+Внутренние:
+
+- `GET /internal/products/{id}`
+- `PATCH /internal/products/{id}/stock/decrement`
 
 ## Рекомендации по seed-данным
 
