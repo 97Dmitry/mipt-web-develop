@@ -41,7 +41,7 @@ async def _check_unique(db: AsyncSession, name: str | None, slug: str | None, ex
 async def list_categories(db: AsyncSession = Depends(get_db)):
     result = await db.execute(select(Category).order_by(Category.sort_order, Category.id))
     cats = result.scalars().all()
-    return list_response([CategoryResponse.model_validate(c) for c in cats], page=1, limit=len(cats), total=len(cats))
+    return list_response([CategoryResponse.from_orm_obj(c) for c in cats], page=1, limit=len(cats), total=len(cats))
 
 
 @router.post("", status_code=201)
@@ -52,7 +52,7 @@ async def create_category(body: CategoryCreate, db: AsyncSession = Depends(get_d
     db.add(cat)
     await db.commit()
     await db.refresh(cat)
-    return data_response(CategoryResponse.model_validate(cat))
+    return data_response(CategoryResponse.from_orm_obj(cat))
 
 
 @router.patch("/{cat_id}")
@@ -69,7 +69,7 @@ async def update_category(cat_id: int, body: CategoryUpdate, db: AsyncSession = 
         cat.is_active = body.is_active
     await db.commit()
     await db.refresh(cat)
-    return data_response(CategoryResponse.model_validate(cat))
+    return data_response(CategoryResponse.from_orm_obj(cat))
 
 
 @router.delete("/{cat_id}", status_code=204)

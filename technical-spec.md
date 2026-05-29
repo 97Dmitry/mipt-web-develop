@@ -330,9 +330,9 @@ Figma-файл: [ТЗ - Интернет-магазин лампочек](https:
 
 Публичные endpoint:
 
-- `GET /categories`
-- `GET /products`
-- `GET /products/{id}`
+- `GET /public/categories`
+- `GET /public/products`
+- `GET /public/products/{id}`
 
 Админские endpoint:
 
@@ -343,6 +343,13 @@ Figma-файл: [ТЗ - Интернет-магазин лампочек](https:
 - `POST /categories`
 - `PATCH /categories/{id}`
 - `DELETE /categories/{id}`
+
+Внутренние endpoint для `order-service`:
+
+- `GET /internal/products/{id}`
+- `PATCH /internal/products/{id}/stock/decrement`
+
+Внутренние endpoint требуют заголовок `X-Internal-Token`.
 
 ### 10.2 `order-service`
 
@@ -444,7 +451,7 @@ BFF endpoint админки:
 - [Структура БД product-service](./db/product-service.md)
 - [Структура БД order-service](./db/order-service.md)
 - [Структура БД admin-panel-service](./db/admin-panel-service.md)
-- `docs/postman/product-service.postman_collection.json`
-- `docs/postman/order-service.postman_collection.json`
-- `docs/postman/admin-panel-service.postman_collection.json`
+- `postman/product-service.postman_collection.json`
+- `postman/order-service.postman_collection.json`
+- `postman/admin-panel-service.postman_collection.json`
 - [Figma-файл с прототипами](https://www.figma.com/design/ylKRkyzlLtbspdLxWrHx6n)

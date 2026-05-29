@@ -2,7 +2,7 @@
   "info": {
     "_postman_id": "7fb35ec1-6722-4b4d-bf7d-06f79a31f002",
     "name": "Lamp Factory / Order Service",
-    "description": "Коллекция order-service. Корзина и создание заказа доступны гостю по sessionId. Административные endpoint /admin/orders и /auth/me,/auth/logout требуют Bearer JWT в {{adminToken}}.",
+    "description": "Коллекция order-service. Корзина и создание заказа доступны гостю по sessionId. Административные endpoint /admin/orders требуют Bearer JWT в {{adminToken}}, который выдает admin-panel-service.",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
   },
   "variable": [

@@ -31,6 +31,22 @@ services:
       timeout: 5s
       retries: 10
 
+  db-admin:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_DB: admin_db
+      POSTGRES_USER: app
+      POSTGRES_PASSWORD: secret
+    ports:
+      - "5435:5432"
+    volumes:
+      - admin-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U app -d admin_db"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
   product-service:
     build: ./product-service
     command: sh -c "python seed.py && uvicorn app.main:app --host 0.0.0.0 --port 8000"
@@ -43,6 +59,7 @@ services:
       DATABASE_URL: postgresql+asyncpg://app:secret@db-product/product_db
       JWT_SECRET: change-me-in-env
       JWT_ALG: HS256
+      INTERNAL_API_TOKEN: change-me-in-env
       SEED_CATALOG_ON_START: "true"
 
   order-service:
@@ -57,6 +74,25 @@ services:
     environment:
       DATABASE_URL: postgresql+asyncpg://app:secret@db-order/order_db
       PRODUCT_SERVICE_URL: http://product-service:8000
+      JWT_SECRET: change-me-in-env
+      JWT_ALG: HS256
+      INTERNAL_API_TOKEN: change-me-in-env
+
+  admin-panel-service:
+    build: ./admin-panel-service
+    ports:
+      - "3003:8000"
+    depends_on:
+      db-admin:
+        condition: service_healthy
+      product-service:
+        condition: service_started
+      order-service:
+        condition: service_started
+    environment:
+      DATABASE_URL: postgresql+asyncpg://app:secret@db-admin/admin_db
+      PRODUCT_SERVICE_URL: http://product-service:8000
+      ORDER_SERVICE_URL: http://order-service:8000
       ADMIN_LOGIN: admin
       ADMIN_PASSWORD: Admin123!
       ADMIN_FULL_NAME: Администратор
@@ -67,3 +103,4 @@ services:
 volumes:
   product-data:
   order-data:
+  admin-data:
